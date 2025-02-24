@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "567775450907",
+    "project_id": "trashhdetection",
+    "storage_bucket": "trashhdetection.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:567775450907:android:834c5b5fbf78d87b1fa5be",
+        "android_client_info": {
+          "package_name": "com.example.trashhdetection"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCiuUgZykCM_I7qf0etvfowTPxkdaMIX7g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
