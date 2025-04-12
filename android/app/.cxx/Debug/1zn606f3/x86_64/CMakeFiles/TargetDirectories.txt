@@ -1,0 +1,2 @@
+D:/Flutter Apps/trashhdetection/android/app/.cxx/Debug/1zn606f3/x86_64/CMakeFiles/edit_cache.dir
+D:/Flutter Apps/trashhdetection/android/app/.cxx/Debug/1zn606f3/x86_64/CMakeFiles/rebuild_cache.dir

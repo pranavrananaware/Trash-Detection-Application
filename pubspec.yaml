@@ -52,14 +52,23 @@ dependencies:
   google_maps_flutter: ^2.10.0
   url_launcher: ^6.3.1
   fl_chart: ^0.70.2
+  flutter_animate: ^4.5.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-
   flutter_lints: ^4.0.0
+  flutter_launcher_icons: ^0.13.1
+  google_fonts: ^6.1.0
+  font_awesome_flutter: ^10.5.0
+
+flutter_icons:
+  android: true
+  ios: true
+  image_path: "assets/images/wtd_logo.png"
 
 flutter:
   uses-material-design: true
   assets:
-    - assets/model.json # Ensure the JSON model is inside `assets/`
+    - assets/model.json
+    - assets/images/wtd_logo.png

@@ -1,7 +1,7 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:trashhdetection/screens/login_screen.dart'; // Import the LoginScreen
+import 'package:trashhdetection/screens/login_screen.dart';
 
 class SignupScreen extends StatefulWidget {
   @override
@@ -17,93 +17,80 @@ class _SignupScreenState extends State<SignupScreen> {
   final TextEditingController passwordController = TextEditingController();
 
   bool _isLoading = false;
+  bool _obscurePassword = true;
   String? selectedRole;
 
   Future<void> handleSignup() async {
     if (selectedRole == null) {
-      _showErrorDialog("Please select a role (User or Admin)");
+      _showDialog("Please select a role (User or Admin)");
       return;
     }
 
     if (usernameController.text.trim().isEmpty) {
-      _showErrorDialog("Username cannot be empty.");
+      _showDialog("Username cannot be empty.");
       return;
     }
 
-    setState(() {
-      _isLoading = true;
-    });
+    setState(() => _isLoading = true);
 
     try {
-      // Check if email already exists
-      List<String> signInMethods =
-          // ignore: deprecated_member_use
-          await _auth.fetchSignInMethodsForEmail(emailController.text.trim());
+      List<String> methods = await _auth.fetchSignInMethodsForEmail(emailController.text.trim());
 
-      if (signInMethods.isNotEmpty) {
-        _showErrorDialog("Email already exists. Use a different email.");
+      if (methods.isNotEmpty) {
+        _showDialog("Email already exists. Try a different one.");
         setState(() => _isLoading = false);
         return;
       }
 
-      // Create new user in Firebase Authentication
-      UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
+      final UserCredential userCredential = await _auth.createUserWithEmailAndPassword(
         email: emailController.text.trim(),
         password: passwordController.text.trim(),
       );
 
-      print("User created successfully: ${userCredential.user!.uid}");
+      await userCredential.user?.sendEmailVerification();
+      final uid = userCredential.user?.uid;
+      final email = userCredential.user?.email;
 
-      // Store user data in Firestore
-      await _firestore.collection('users').doc(userCredential.user!.uid).set({
+      await _firestore.collection('users').doc(uid).set({
         'username': usernameController.text.trim(),
-        'email': emailController.text.trim(),
+        'email': email,
         'role': selectedRole,
-        'uid': userCredential.user!.uid,
+        'uid': uid,
       });
 
-      print("User data stored in Firestore");
+      _showDialog("Signup successful! A verification link has been sent to your email. Please verify before logging in.");
 
-      setState(() {
-        _isLoading = false;
-      });
+      setState(() => _isLoading = false);
 
-      // Navigate to LoginScreen after a successful sign up
-      if (mounted) {
-        // Ensure that the navigator is pushed after the async task is complete
+      Future.delayed(const Duration(seconds: 3), () {
         Navigator.pushReplacement(
           context,
           MaterialPageRoute(builder: (context) => LoginScreen()),
         );
-      }
-    } on FirebaseAuthException catch (e) {
-      setState(() {
-        _isLoading = false;
       });
-
+    } on FirebaseAuthException catch (e) {
+      setState(() => _isLoading = false);
       if (e.code == 'email-already-in-use') {
-        _showErrorDialog("This email is already registered. Try logging in.");
+        _showDialog("This email is already registered.");
       } else {
-        _showErrorDialog(e.message ?? "Signup failed. Try again.");
+        _showDialog(e.message ?? "Signup failed.");
       }
     }
   }
 
-  void _showErrorDialog(String message) {
+  void _showDialog(String message) {
     showDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: Text("Signup Error"),
-          content: Text(message),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(context).pop(),
-              child: Text("OK"),
-            ),
-          ],
-        );
-      },
+      builder: (context) => AlertDialog(
+        title: const Text("Signup Info"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: const Text("OK"),
+          ),
+        ],
+      ),
     );
   }
 
@@ -115,13 +102,8 @@ class _SignupScreenState extends State<SignupScreen> {
         child: Center(
           child: SingleChildScrollView(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(
-                  Icons.water_damage,
-                  size: 100,
-                  color: Colors.blue.shade700,
-                ),
+                Icon(Icons.water_damage, size: 100, color: Colors.blue.shade700),
                 const SizedBox(height: 20),
                 Text(
                   'Water Trash Detection',
@@ -132,7 +114,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
-                // Username Input
                 TextField(
                   controller: usernameController,
                   decoration: const InputDecoration(
@@ -142,7 +123,6 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
                 const SizedBox(height: 15),
-                // Email Input
                 TextField(
                   controller: emailController,
                   decoration: const InputDecoration(
@@ -152,18 +132,26 @@ class _SignupScreenState extends State<SignupScreen> {
                   ),
                 ),
                 const SizedBox(height: 15),
-                // Password Input
                 TextField(
                   controller: passwordController,
-                  obscureText: true,
-                  decoration: const InputDecoration(
+                  obscureText: _obscurePassword,
+                  decoration: InputDecoration(
                     labelText: 'Password',
-                    prefixIcon: Icon(Icons.lock),
-                    border: OutlineInputBorder(),
+                    prefixIcon: const Icon(Icons.lock),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                      icon: Icon(
+                        _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                      ),
+                      onPressed: () {
+                        setState(() {
+                          _obscurePassword = !_obscurePassword;
+                        });
+                      },
+                    ),
                   ),
                 ),
                 const SizedBox(height: 20),
-                // Role Selection Dropdown
                 DropdownButtonFormField<String>(
                   value: selectedRole,
                   decoration: const InputDecoration(
@@ -171,7 +159,10 @@ class _SignupScreenState extends State<SignupScreen> {
                     border: OutlineInputBorder(),
                   ),
                   items: ['User', 'Admin'].map((role) {
-                    return DropdownMenuItem(value: role, child: Text(role));
+                    return DropdownMenuItem(
+                      value: role,
+                      child: Text(role),
+                    );
                   }).toList(),
                   onChanged: (value) {
                     setState(() {
@@ -180,18 +171,17 @@ class _SignupScreenState extends State<SignupScreen> {
                   },
                 ),
                 const SizedBox(height: 30),
-                // Sign Up Button
                 ElevatedButton(
                   onPressed: _isLoading ? null : handleSignup,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: Colors.blue.shade700,
+                    minimumSize: const Size.fromHeight(50),
                   ),
                   child: _isLoading
                       ? const CircularProgressIndicator(color: Colors.white)
                       : const Text('Sign Up', style: TextStyle(color: Colors.white)),
                 ),
                 const SizedBox(height: 20),
-                // Navigate to Login
                 TextButton(
                   onPressed: () {
                     Navigator.pushReplacement(

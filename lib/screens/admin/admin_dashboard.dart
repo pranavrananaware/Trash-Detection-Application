@@ -18,100 +18,89 @@ class AdminDashboardScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: Colors.indigo.shade50,
       appBar: AppBar(
-        title: Text("Admin Dashboard"),
+        title: Text("Welcome, Admin 👋"),
+        backgroundColor: Colors.indigo,
+        elevation: 4,
         actions: [
           IconButton(
-            icon: Icon(Icons.settings),
+            icon: const Icon(Icons.settings, color: Colors.white),
             onPressed: () {
-              // Navigate to settings
+              Navigator.push(context, MaterialPageRoute(builder: (_) => AdminSettingsScreen()));
             },
           ),
           IconButton(
-            icon: Icon(Icons.logout),
+            icon: Icon(Icons.logout, color: Colors.white),
             onPressed: () {
-              // Handle logout
+              Navigator.pop(context);
             },
           ),
         ],
       ),
-      body: Center(
-        child: Padding(
-          padding: const EdgeInsets.all(16.0),
-          child: GridView.count(
-            crossAxisCount: 2,
-            crossAxisSpacing: 16.0,
-            mainAxisSpacing: 16.0,
-            childAspectRatio: 1.0,
-            shrinkWrap: true,
-            children: [
-              _buildDashboardCard(
-                context,
-                icon: Icons.people,
-                title: "User Management",  // Changed title to "User Management"
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder: (context) => UserManagementScreen(),
-                    ),
-                  );
-                },
-              ),
-              _buildDashboardCard(
-                context,
-                icon: Icons.analytics,
-                title: "Statistics & Analytics",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AdminAnalyticsScreen()),
-                  );
-                },
-              ),
-              _buildDashboardCard(
-                context,
-                icon: Icons.image,
-                title: "Trash Images Detected",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => TrashImagesDetectedScreen()),
-                  );
-                },
-              ),
-              _buildDashboardCard(
-                context,
-                icon: Icons.report,
-                title: "Manage Trash Reports",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => ManageTrashReportsScreen()),
-                  );
-                },
-              ),
-              _buildDashboardCard(
-                context,
-                icon: Icons.notifications,
-                title: "Notifications",
-                onTap: () {
-                  // Navigate to notification management screen
-                },
-              ),
-              _buildDashboardCard(
-                context,
-                icon: Icons.settings,
-                title: "Settings",
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => AdminSettingsScreen()),
-                  );
-                },
-              ),
-            ],
-          ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: GridView.count(
+          crossAxisCount: 2,
+          crossAxisSpacing: 16.0,
+          mainAxisSpacing: 16.0,
+          childAspectRatio: 1.0,
+          children: [
+            _buildDashboardCard(
+              context,
+              icon: Icons.people_alt_rounded,
+              iconColor: Colors.deepPurple,
+              title: "User Management",
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => UserManagementScreen()));
+              },
+            ),
+            _buildDashboardCard(
+              context,
+              icon: Icons.bar_chart_rounded,
+              iconColor: Colors.teal,
+              title: "Analytics",
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => AdminAnalyticsScreen()));
+              },
+            ),
+            _buildDashboardCard(
+              context,
+              icon: Icons.image_rounded,
+              iconColor: Colors.orange,
+              title: "Trash Images",
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => TrashImagesDetectedScreen()));
+              },
+            ),
+            _buildDashboardCard(
+              context,
+              icon: Icons.report_gmailerrorred_rounded,
+              iconColor: Colors.redAccent,
+              title: "Trash Reports",
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => ManageTrashReportsScreen()));
+              },
+            ),
+            _buildDashboardCard(
+              context,
+              icon: Icons.notifications_active_rounded,
+              iconColor: Colors.pink,
+              title: "Notifications",
+              onTap: () {
+                // Notification screen
+              },
+            ),
+            _buildDashboardCard(
+              context,
+              icon: Icons.settings_applications_rounded,
+              iconColor: Colors.blueGrey,
+              title: "Settings",
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => AdminSettingsScreen()));
+              },
+            ),
+          ],
         ),
       ),
     );
@@ -122,24 +111,41 @@ class AdminDashboardScreen extends StatelessWidget {
     required IconData icon,
     required String title,
     required VoidCallback onTap,
+    required Color iconColor,
   }) {
     return GestureDetector(
       onTap: onTap,
-      child: Card(
-        elevation: 4.0,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12),
+      child: AnimatedContainer(
+        duration: Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(20),
+          boxShadow: const [
+            BoxShadow(
+              color: Colors.black12,
+              blurRadius: 8,
+              offset: Offset(3, 5),
+            ),
+          ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
-            Icon(icon, size: 50, color: Colors.blue),
-            SizedBox(height: 8),
+            CircleAvatar(
+              radius: 30,
+              backgroundColor: iconColor.withOpacity(0.1),
+              child: Icon(icon, size: 36, color: iconColor),
+            ),
+            const SizedBox(height: 12),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w600,
+                color: Colors.indigo.shade800,
+              ),
             ),
           ],
         ),

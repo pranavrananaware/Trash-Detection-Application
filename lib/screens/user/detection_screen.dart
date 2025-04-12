@@ -1,78 +1,90 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
-import 'dart:io';
 
-class DetectionScreen extends StatefulWidget {
-  @override
-  _DetectionScreenState createState() => _DetectionScreenState();
-}
-
-class _DetectionScreenState extends State<DetectionScreen> {
-  File? _image;
-  final picker = ImagePicker();
-
-  // Function to pick an image from the gallery
-  Future<void> _pickImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.gallery);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-
-      // Call YOLOv8 model for detection here
-      _runObjectDetection(_image!);
-    }
-  }
-
-  // Function to capture an image using the camera
-  Future<void> _captureImage() async {
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
-    if (pickedFile != null) {
-      setState(() {
-        _image = File(pickedFile.path);
-      });
-
-      // Call YOLOv8 model for detection here
-      _runObjectDetection(_image!);
-    }
-  }
-
-  // Placeholder function for YOLOv8 detection (to be implemented)
-  Future<void> _runObjectDetection(File image) async {
-    // TODO: Implement YOLOv8 model inference
-    print("Running YOLOv8 detection on image: ${image.path}");
-  }
+class DetectionScreen extends StatelessWidget {
+  const DetectionScreen({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
+    final args =
+        ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>? ??
+            {};
+
+    final String imageUrl = args['imageUrl'] ?? '';
+    final List<dynamic> detectedObjects = args['detectedObjects'] ?? [];
+
     return Scaffold(
-      appBar: AppBar(title: Text("Trash Detection")),
-      body: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _image == null
-              ? Text("No image selected", style: TextStyle(fontSize: 16))
-              : Image.file(_image!, height: 300), // Display selected image
-
-          SizedBox(height: 20),
-
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton.icon(
-                onPressed: _pickImage,
-                icon: Icon(Icons.image),
-                label: Text("Select Image"),
+      appBar: AppBar(
+        title: const Text('Detection Result'),
+        backgroundColor: Colors.green[700],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          children: [
+            imageUrl.isNotEmpty
+                ? Container(
+                    width: double.infinity,
+                    height: 300,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(16),
+                      image: DecorationImage(
+                        image: NetworkImage(imageUrl),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  )
+                : const SizedBox(
+                    height: 300,
+                    child: Center(
+                      child: Text('Image not available'),
+                    ),
+                  ),
+            const SizedBox(height: 20),
+            const Text(
+              'Detected Objects',
+              style: TextStyle(
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
-              SizedBox(width: 20),
-              ElevatedButton.icon(
-                onPressed: _captureImage,
-                icon: Icon(Icons.camera_alt),
-                label: Text("Capture Image"),
-              ),
-            ],
-          ),
-        ],
+            ),
+            const SizedBox(height: 12),
+            Expanded(
+              child: detectedObjects.isEmpty
+                  ? const Center(
+                      child: Text(
+                        'No objects detected.',
+                        style: TextStyle(fontSize: 16),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: detectedObjects.length,
+                      itemBuilder: (context, index) {
+                        final object = detectedObjects[index];
+                        final label = object['label'] ?? 'Unknown';
+                        final box = object['boundingBox'] ?? {};
+                        return Card(
+                          margin: const EdgeInsets.symmetric(vertical: 6),
+                          elevation: 4,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: ListTile(
+                            leading: const Icon(Icons.search, color: Colors.green),
+                            title: Text(label, style: const TextStyle(fontSize: 18)),
+                            subtitle: box.isNotEmpty
+                                ? Text(
+                                    'Box: (L:${box['left']}, T:${box['top']}, R:${box['right']}, B:${box['bottom']})',
+                                    style: const TextStyle(fontSize: 14),
+                                  )
+                                : null,
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

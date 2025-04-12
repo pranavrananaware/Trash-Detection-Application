@@ -6,7 +6,7 @@ import 'package:firebase_storage/firebase_storage.dart';
 class HistoryScreen extends StatefulWidget {
   final List<Map<String, dynamic>> detectionHistory;
 
-  HistoryScreen({required this.detectionHistory});
+  HistoryScreen({required this.detectionHistory, required List<String> historyList});
 
   @override
   _HistoryScreenState createState() => _HistoryScreenState();

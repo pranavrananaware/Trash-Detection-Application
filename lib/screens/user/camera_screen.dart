@@ -1,4 +1,6 @@
 import 'dart:io';
+import 'dart:convert';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
@@ -8,13 +10,12 @@ import 'package:google_mlkit_image_labeling/google_mlkit_image_labeling.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:geocoding/geocoding.dart';
 import 'package:geolocator/geolocator.dart';
-import 'dart:convert';
 
 class CameraScreen extends StatefulWidget {
   final Function(List<Map<String, dynamic>>) onImageCaptured;
   final String username;
 
-  CameraScreen({required this.onImageCaptured, required this.username});
+  const CameraScreen({required this.onImageCaptured, required this.username});
 
   @override
   _CameraScreenState createState() => _CameraScreenState();
@@ -24,7 +25,10 @@ class _CameraScreenState extends State<CameraScreen> {
   CameraController? _controller;
   bool _isCameraInitialized = false;
   bool _isUploading = false;
-  final imageLabeler = ImageLabeler(options: ImageLabelerOptions(confidenceThreshold: 0.6));
+
+  final imageLabeler = ImageLabeler(
+    options: ImageLabelerOptions(confidenceThreshold: 0.6),
+  );
 
   @override
   void initState() {
@@ -38,9 +42,7 @@ class _CameraScreenState extends State<CameraScreen> {
       _controller = CameraController(cameras[0], ResolutionPreset.high);
       await _controller!.initialize();
       if (!mounted) return;
-      setState(() {
-        _isCameraInitialized = true;
-      });
+      setState(() => _isCameraInitialized = true);
     }
   }
 
@@ -64,6 +66,7 @@ class _CameraScreenState extends State<CameraScreen> {
         'detectedObjects': detectedObjects.join(', '),
         'timestamp': DateTime.now().toIso8601String(),
       };
+
       await _saveToHistory(historyItem);
 
       String? imageUrl = await _uploadImageToFirebase(savedImage);
@@ -77,11 +80,34 @@ class _CameraScreenState extends State<CameraScreen> {
           'status': 'Pending Review',
         });
       }
+
       widget.onImageCaptured([historyItem]);
+
       setState(() => _isUploading = false);
 
       ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image Captured & Uploaded Successfully')));
+        const SnackBar(content: Text('Image Captured & Uploaded Successfully')),
+      );
+
+      // ✅ Navigate to detection screen
+      Navigator.pushNamed(
+        context,
+        '/detection',
+        arguments: {
+          'imageUrl': imageUrl,
+          'detectedObjects': detectedObjects.map((label) => {
+            'label': label,
+            'boundingBox': {
+              'left': 50.0,
+              'top': 50.0,
+              'right': 200.0,
+              'bottom': 200.0,
+            }
+          }).toList(),
+          'imageWidth': 400.0,  // Replace with actual width if needed
+          'imageHeight': 400.0, // Replace with actual height if needed
+        },
+      );
     } catch (e) {
       setState(() => _isUploading = false);
       print('Error capturing image: $e');
@@ -127,7 +153,9 @@ class _CameraScreenState extends State<CameraScreen> {
   Future<String?> _uploadImageToFirebase(File imageFile) async {
     try {
       String fileName = "detection_${DateTime.now().millisecondsSinceEpoch}.jpg";
-      TaskSnapshot snapshot = await FirebaseStorage.instance.ref('detections/$fileName').putFile(imageFile);
+      TaskSnapshot snapshot = await FirebaseStorage.instance
+          .ref('detections/$fileName')
+          .putFile(imageFile);
       return await snapshot.ref.getDownloadURL();
     } catch (e) {
       print("Error uploading image to Firebase: $e");
@@ -163,7 +191,8 @@ class _CameraScreenState extends State<CameraScreen> {
                         icon: const Icon(Icons.camera_alt),
                         label: const Text('Capture Image'),
                         style: ElevatedButton.styleFrom(
-                          padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 30),
+                          padding: const EdgeInsets.symmetric(
+                              vertical: 15, horizontal: 30),
                           textStyle: const TextStyle(fontSize: 18),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(10),
